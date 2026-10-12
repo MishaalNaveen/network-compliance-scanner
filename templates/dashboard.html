@@ -1,0 +1,53 @@
+{% extends 'base.html' %}
+{% block title %}Overview | Sentinel{% endblock %}
+{% block content %}
+<div class="page-heading">
+  <div><div class="eyebrow">SECURITY POSTURE</div><h1>Assessment overview</h1><p>Observed services, policy review, and next verification steps.</p></div>
+  <a class="button primary" href="{{ url_for('scan') }}">＋ New assessment</a>
+</div>
+<div class="banner"><span class="banner-icon">i</span><div><strong>Interpret findings as evidence for review</strong><p>Open ports do not prove a policy violation or vulnerability. Policy priority is a local review label, not CVSS or an official NIST score. Any sample records are marked DEMO DATA.</p></div><span class="tag neutral">NMAP EVIDENCE</span></div>
+
+<div class="metric-grid">
+  <article class="metric"><div class="metric-label">ASSESSMENTS</div><div class="metric-value">{{ total }}</div><div class="metric-foot">Persisted assessment records</div></article>
+  <article class="metric"><div class="metric-label">FINDINGS</div><div class="metric-value">{{ findings_count }}</div><div class="metric-foot">Across saved assessments</div></article>
+  <article class="metric"><div class="metric-label">HIGH POLICY PRIORITY</div><div class="metric-value risk-text-high">{{ counts.High }}</div><div class="metric-foot">Across saved assessments</div></article>
+  <article class="metric"><div class="metric-label">REVIEW REQUIRED</div><div class="metric-value">{{ review_count }}</div><div class="metric-foot">Across saved assessments</div></article>
+</div>
+
+<section class="panel latest-panel">
+  <div class="panel-heading"><div><h2>Latest real assessment</h2><p>{% if latest %}{{ latest.target }} · {{ latest.created_at[:16].replace('T',' ') }} UTC · {{ latest.profile }}{% else %}No network scan has been run yet.{% endif %}</p></div>
+    {% if latest %}<a class="text-link" href="{{ url_for('assessment_detail', assessment_id=latest.id) }}">View assessment →</a>{% endif %}
+  </div>
+  <div class="latest-stats">
+    <div><b>{{ latest_open_ports }}</b><span>open ports observed</span></div><div><b>{{ latest_counts.violation }}</b><span>baseline violations</span></div><div><b>{{ latest_counts.review }}</b><span>review items</span></div>
+    <div><b>{{ latest_counts.High }}</b><span>High policy priority</span></div><div><b>{{ latest_counts.Medium }}</b><span>Medium policy priority</span></div><div><b>{{ latest_counts.Low }}</b><span>Low policy priority</span></div>
+    <div><b>{{ latest_counts.mapped }}</b><span>with direct framework references</span></div><div><b>{{ latest_counts.verification }}</b><span>requiring verification</span></div>
+  </div>
+</section>
+
+<div class="section-grid">
+  <section class="panel"><div class="panel-heading"><div><h2>Historical policy priority</h2><p>Across persisted findings; fixed rules, not a vulnerability score</p></div><span class="tag neutral">POLICY</span></div>
+    {% if findings_count %}<div class="risk-chart" role="img" aria-label="High {{ counts.High }}, Medium {{ counts.Medium }}, Low {{ counts.Low }} policy priorities"><div class="chart-total">{{ findings_count }}<small>FINDINGS</small></div><div class="risk-bars">{% for name in ['High','Medium','Low'] %}<div class="risk-row"><span><i class="risk-dot {{ name|lower }}"></i>{{ name }}</span><div class="bar-track"><div class="bar {{ name|lower }}" style="width:{{ (counts[name] * 100 / findings_count)|round|int }}%"></div></div><b>{{ counts[name] }}</b></div>{% endfor %}</div></div>
+    {% else %}<div class="empty compact"><strong>No policy priorities yet</strong><p>Saved assessment findings will appear here.</p></div>{% endif %}
+  </section>
+  <section class="panel"><div class="panel-heading"><div><h2>Recent assessments</h2><p>Latest saved assessment records</p></div><a class="text-link" href="{{ url_for('history') }}">View history →</a></div>
+    {% if assessments %}<div class="assessment-list">{% for a in assessments[:4] %}<a class="assessment-item" href="{{ url_for('assessment_detail', assessment_id=a.id) }}"><span class="assessment-icon">⌕</span><span class="assessment-main"><b>{{ a.target }}{% if a.is_demo %}<em class="demo-label">DEMO DATA</em>{% endif %}</b><small>{{ a.profile }} · {{ a.created_at[:16].replace('T',' ') }} UTC</small></span><span class="tag neutral">{{ a.status }}</span></a>{% endfor %}</div>
+    {% else %}<div class="empty compact"><strong>No assessments saved</strong><p>History will appear here after a scan completes.</p></div>{% endif %}
+  </section>
+</div>
+
+<section class="panel findings-panel">
+  <div class="panel-heading"><div><h2>Latest findings</h2><p>Exposure and policy priority from the latest real assessment</p></div><span class="tag neutral">{{ findings|length }} SHOWN</span></div>
+  {% if findings %}<div class="table-wrap"><table>
+    <thead><tr><th>PORT / SERVICE</th><th>POLICY STATUS</th><th>POLICY PRIORITY</th><th>VULNERABILITY SEVERITY</th><th>DETAILS</th></tr></thead>
+    <tbody>{% for f in findings %}<tr>
+      <td><b>{{ f.port }} / {{ f.service }}</b><span class="subcell">{{ f.observation }}</span></td>
+      <td><span class="tag {{ 'danger' if f.status == 'violation' else 'review' }}">{{ 'Baseline violation' if f.status == 'violation' else 'Review required' }}</span></td>
+      <td><span class="risk-label {{ f.risk|lower }}"><i></i>{{ f.risk }}</span></td>
+      <td>{% if f.vulnerability_status == 'verified' and f.cve and f.cvss_version and f.cvss_score is not none and f.cvss_vector and f.cvss_source %}{{ f.cve }}<span class="subcell">CVSS {{ f.cvss_version }} · {{ '%.1f'|format(f.cvss_score) }}</span>{% else %}Not assessed{% endif %}</td>
+      <td><a class="text-link" href="{{ url_for('assessment_detail', assessment_id=latest.id) }}">Evidence and checks →</a></td>
+    </tr>{% endfor %}</tbody>
+  </table></div>{% else %}<div class="empty"><strong>Nothing to review yet</strong><p>Findings appear after a completed scan has stored open-port observations.</p><a class="button secondary" href="{{ url_for('scan') }}">Configure an assessment</a></div>{% endif %}
+</section>
+<footer class="page-foot">A clean port scan does not establish that a system is secure or compliant.</footer>
+{% endblock %}

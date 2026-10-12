@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0b1120"><title>{% block title %}Sentinel | Network Assurance{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+<div class="shell">
+  <aside class="sidebar" aria-label="Main navigation">
+    <a class="brand" href="{{ url_for('dashboard') }}"><span class="brand-mark">S</span><span>Sentinel<small>NETWORK ASSURANCE</small></span></a>
+    <div class="nav-label">WORKSPACE</div>
+    <nav><a class="nav-link {% if request.endpoint == 'dashboard' %}active{% endif %}" href="{{ url_for('dashboard') }}"><span>◫</span> Overview</a>
+      <a class="nav-link {% if request.endpoint == 'scan' %}active{% endif %}" href="{{ url_for('scan') }}"><span>⌕</span> New assessment</a>
+      <a class="nav-link {% if request.endpoint in ['history','assessment_detail'] %}active{% endif %}" href="{{ url_for('history') }}"><span>◷</span> Assessment history</a></nav>
+    <div class="sidebar-bottom"><span class="status-dot"></span> Assessment workspace<small>Nmap scan profiles enabled</small></div>
+  </aside>
+  <main class="main"><header class="topbar"><span>Information Assurance <span class="slash">/</span> {% block crumb %}Overview{% endblock %}</span><span class="top-meta">LOCAL WORKSPACE <i></i></span></header>
+    <section class="content">
+      {% with messages = get_flashed_messages(with_categories=true) %}{% if messages %}<div class="alerts" role="status" aria-live="polite">{% for category,message in messages %}<div class="alert {{ category }}">{{ message }}</div>{% endfor %}</div>{% endif %}{% endwith %}
+      {% block content %}{% endblock %}
+    </section>
+  </main>
+</div>
+</body></html>

@@ -1,0 +1,72 @@
+{% extends 'base.html' %}
+{% block title %}Assessment {{ assessment.id }} | Sentinel{% endblock %}
+{% block crumb %}<a href="{{ url_for('history') }}">History</a> / {{ assessment.target }}{% endblock %}
+{% block content %}
+<div class="page-heading">
+  <div>
+    <div class="eyebrow">ASSESSMENT #{{ assessment.id }}{% if assessment.is_demo %} · DEMO DATA{% endif %}</div>
+    <h1>{{ assessment.target }}</h1>
+    <p>{{ assessment.profile }} · {{ assessment.created_at }} UTC</p>
+  </div>
+  <div><a class="button primary" href="{{ url_for('assessment_pdf', assessment_id=assessment.id) }}">Download PDF Report</a>
+  <span class="tag neutral">{{ assessment.status }}</span></div>
+</div>
+{% if assessment.error %}<div class="alert error">{{ assessment.error }}</div>{% endif %}
+<div class="banner"><span class="banner-icon">i</span><div><strong>Policy priority is not vulnerability severity</strong><p>These are service observations and review priorities. Nmap did not establish a CVE or verify organizational compliance.</p></div></div>
+
+<section class="panel">
+  <div class="panel-heading"><div><h2>Findings and observed services</h2><p>Only open ports are evaluated; service labels can be inferred from port numbers.</p></div></div>
+  {% if assessment.findings %}
+  <div class="table-wrap"><table>
+    <thead><tr><th>PORT / SERVICE</th><th>OBSERVED EXPOSURE</th><th>POLICY STATUS</th><th>POLICY PRIORITY</th><th>VULNERABILITY</th><th>FRAMEWORK REFERENCE</th><th>ASSESSMENT DETAILS</th></tr></thead>
+    <tbody>{% for f in assessment.findings %}
+      <tr>
+        <td><b>{{ f.port }} / {{ f.service }}</b><span class="subcell">{{ f.protocol|upper }} · {{ f.observed_state }}</span></td>
+        <td class="recommendation">{{ f.observation or 'Open service observation; historical record predates evidence detail.' }}</td>
+        <td>
+          <span class="tag {{ 'danger' if f.status == 'violation' else 'review' }}">{{ 'Baseline violation' if f.status == 'violation' else 'Review required' }}</span>
+          {% if f.violation_requirement %}<span class="subcell">Requirement: {{ f.violation_requirement }}</span>{% endif %}
+          {% if f.legacy_status %}<span class="subcell">Prior label retained: {{ f.legacy_status }}; original record had no configured baseline.</span>{% endif %}
+        </td>
+        <td><span class="risk-label {{ f.risk|lower }}"><i></i>{{ f.risk }}</span><span class="subcell">Rule-based policy priority</span></td>
+        <td>
+          {% if f.vulnerability_status == 'verified' and f.cve and f.cvss_version and f.cvss_score is not none and f.cvss_vector and f.cvss_source %}
+            <b>{{ f.cve }}</b><span class="subcell">CVSS {{ f.cvss_version }} · {{ '%.1f'|format(f.cvss_score) }}</span>
+            <details><summary>Vector and source</summary><p>{{ f.cvss_vector }}<br><a href="{{ f.cvss_source }}">Source</a></p></details>
+          {% else %}<span class="subcell">Not assessed; no verified CVE.</span>{% endif %}
+        </td>
+        <td>
+          {% if f.framework_mappings %}
+            {% for mapping in f.framework_mappings %}
+              <details><summary>{{ mapping.framework }} {{ mapping.version }} · {{ mapping.identifier }}</summary>
+                <p><b>{{ mapping.title }}</b></p><p>{{ mapping.rationale }}</p>
+                <small>Evidence limit: {{ mapping.evidence_limit }}</small><br>
+                <a class="text-link" href="{{ mapping.source }}">Official framework source</a>
+              </details>
+            {% endfor %}
+          {% else %}<span class="subcell">No direct mapping assigned</span>{% endif %}
+        </td>
+        <td class="recommendation"><details><summary>Why and next checks</summary>
+          <p><b>Why it matters:</b> {{ f.why_matters or f.explanation }}</p>
+          <p><b>Verify:</b> {{ f.verification or 'Confirm service ownership, purpose, and approved exposure.' }}</p>
+          <p><b>Suggested action:</b> {{ f.recommendation }}</p>
+          <p><b>Priority rationale:</b> {{ f.risk_reason }}</p>
+        </details></td>
+      </tr>
+    {% endfor %}</tbody>
+  </table></div>
+  {% else %}<div class="empty compact"><strong>No open ports observed</strong><p>This scan reported no open ports in the selected profile. This does not establish that the host is secure or compliant.</p></div>{% endif %}
+</section>
+
+{% if comparison %}
+<section class="panel comparison-panel">
+  <div class="panel-heading"><div><h2>Observed change from previous scan</h2><p>Compared with assessment #{{ comparison.previous.id }} from {{ comparison.previous.created_at }} UTC.</p></div></div>
+  <div class="comparison-note">These are changes in observed open ports for this target. They do not automatically prove remediation, policy compliance, or increased security.</div>
+  <div class="comparison-grid">
+    <div><h3>Appeared ({{ comparison.appeared|length }})</h3>{% for f in comparison.appeared %}<p>{{ f.protocol|upper }}/{{ f.port }} · {{ f.service }}</p>{% else %}<p class="subcell">None</p>{% endfor %}</div>
+    <div><h3>Disappeared ({{ comparison.disappeared|length }})</h3>{% for f in comparison.disappeared %}<p>{{ f.protocol|upper }}/{{ f.port }} · {{ f.service }}</p>{% else %}<p class="subcell">None</p>{% endfor %}</div>
+    <div><h3>Remained present ({{ comparison.remained|length }})</h3>{% for entry in comparison.remained %}<p>{{ entry.current.protocol|upper }}/{{ entry.current.port }} · {{ entry.current.service }}{% if entry.current.service != entry.previous.service %}<small> (previous label: {{ entry.previous.service }})</small>{% endif %}</p>{% else %}<p class="subcell">None</p>{% endfor %}</div>
+  </div>
+</section>
+{% endif %}
+{% endblock %}
