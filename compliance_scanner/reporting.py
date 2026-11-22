@@ -125,20 +125,30 @@ class ReportGenerator:
             if value(finding, "violation_requirement"):
                 story.append(para("Configured requirement: " + value(finding, "violation_requirement")))
             mappings = finding.get("framework_mappings") or []
-            story.append(para("NIST CSF 2.0 mapping"))
+            story.append(para("Potential framework alignment"))
             if not isinstance(mappings, list) or not mappings:
-                story.append(para("No direct NIST CSF 2.0 mapping assigned."))
+                story.append(para("No direct mapping assigned."))
             else:
                 for mapping in mappings:
                     if not isinstance(mapping, dict):
                         continue
+                    if value(mapping, "framework"):
+                        story.append(para(value(mapping, "framework") + " " + value(mapping, "version")))
                     story.append(para("Identifier: " + value(mapping, "identifier", "Not recorded") +
                                       " | Title: " + value(mapping, "title", "Not recorded")))
+                    if value(mapping, "description"):
+                        story.append(para(value(mapping, "description")))
+                    if value(mapping, "category"):
+                        story.append(para("Relevance category: " + value(mapping, "category")))
                     story.append(para("Rationale: " + value(mapping, "rationale", "No rationale recorded.")))
+                    if value(mapping, "evidence"):
+                        story.append(para("Observed evidence: " + value(mapping, "evidence")))
+                    if value(mapping, "verification"):
+                        story.append(para("Verify: " + value(mapping, "verification")))
                     if value(mapping, "evidence_limit"):
                         story.append(para("Evidence limit: " + value(mapping, "evidence_limit")))
         story.extend([para("Limitations and interpretation", "Section"),
                       para("This report summarizes stored scan observations and policy rules. An open port alone does not establish a vulnerability or a policy violation. A service label may be inferred from its port, and a network scan does not verify application configuration, business need, ownership, or organizational compliance."),
-                      para("High, Medium, and Low are rule-based policy priorities for review. They are not CVSS scores or official NIST risk ratings. NIST CSF references identify related review topics and do not certify a control outcome. Manual verification by the responsible service owner is required.")])
+                      para("High, Medium, and Low are rule-based policy priorities for review. They are not CVSS scores or official NIST risk ratings. Framework relevance does not establish compliance or noncompliance. Manual verification by the responsible service owner is required.")])
         doc.build(story, onFirstPage=footer, onLaterPages=footer)
         return buffer.getvalue()

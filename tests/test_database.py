@@ -16,7 +16,7 @@ class DatabaseTests(unittest.TestCase):
         self.temp.cleanup()
 
     def test_assessment_and_findings_round_trip_with_demo_marker(self):
-        finding = evaluate_services([{"port": 23, "service": "telnet"}])
+        finding = evaluate_services([{"port": 23, "service": "telnet", "service_method": "probed"}])
         assessment_id = create_assessment(self.path, "demo.invalid", "standard", is_demo=True, findings=finding)
         items = list_assessments(self.path)
         self.assertEqual(items[0]["id"], assessment_id)
@@ -24,6 +24,7 @@ class DatabaseTests(unittest.TestCase):
         self.assertEqual(items[0]["findings"][0]["risk"], "High")
         self.assertEqual(items[0]["findings"][0]["nist_csf"], "PR.DS-02")
         self.assertEqual(items[0]["findings"][0]["framework_mappings"][0]["version"], "2.0")
+        self.assertEqual(items[0]["findings"][0]["framework_mappings"], finding[0]["framework_mappings"])
         self.assertEqual(items[0]["findings"][0]["vulnerability_status"], "not_assessed")
 
     def test_empty_database_returns_empty_history(self):

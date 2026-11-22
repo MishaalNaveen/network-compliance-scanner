@@ -11,10 +11,10 @@ from compliance_scanner.scanner import (
 
 XML = '''<?xml version="1.0"?>
 <nmaprun><host><ports>
-  <port protocol="tcp" portid="23"><state state="open"/><service name="telnet"/></port>
+  <port protocol="tcp" portid="23"><state state="open"/><service name="telnet" method="probed" tunnel="ssl"/></port>
   <port protocol="tcp" portid="80"><state state="closed"/><service name="http"/></port>
   <port protocol="udp" portid="161"><state state="open|filtered"/><service name="snmp"/></port>
-  <port protocol="udp" portid="53"><state state="open"/><service name="domain"/></port>
+  <port protocol="udp" portid="53"><state state="open"/><service name="domain" method="table"/></port>
 </ports></host></nmaprun>'''
 
 
@@ -44,8 +44,10 @@ class NmapAdapterTests(unittest.TestCase):
 
     def test_xml_parser_returns_normalized_only_open_observations(self):
         self.assertEqual(parse_nmap_xml(XML), [
-            {"port": 23, "protocol": "tcp", "service": "telnet", "state": "open"},
-            {"port": 53, "protocol": "udp", "service": "domain", "state": "open"},
+            {"port": 23, "protocol": "tcp", "service": "telnet", "state": "open",
+             "service_method": "probed", "service_tunnel": "ssl"},
+            {"port": 53, "protocol": "udp", "service": "domain", "state": "open",
+             "service_method": "table", "service_tunnel": None},
         ])
         with self.assertRaises(ScannerError):
             parse_nmap_xml("not xml")

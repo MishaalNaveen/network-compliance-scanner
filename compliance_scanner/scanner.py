@@ -94,6 +94,8 @@ def parse_nmap_xml(xml_content):
             "port": int(port.get("portid")),
             "protocol": port.get("protocol", "unknown"),
             "service": service or "unknown",
+            "service_method": service_element.get("method") if service_element is not None else None,
+            "service_tunnel": service_element.get("tunnel") if service_element is not None else None,
             "state": state,
         })
     return observations

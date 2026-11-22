@@ -40,9 +40,12 @@ Nmap XML is parsed and only ports reported `open` become observations. The scann
 
 ## Framework mapping methodology
 
-NIST Cybersecurity Framework **2.0** is the primary reference. The current mapping is the NIST CSF 2.0 subcategory **PR.DS-02**, “The confidentiality, integrity, and availability of data-in-transit are protected.” It is shown only for Telnet, FTP, and HTTP observations, with a service-specific rationale and an explicit evidence limitation. Other service observations display **No direct mapping assigned** because a port scan does not establish the relevant control outcome. The identifier/title can be checked in the [official NIST CSF 2.0 Core](https://www.nist.gov/system/files/documents/2024/03/25/The_NIST_CSF_2-0_Core_With_Withdrawn_CSF_1-1_Elements.pdf).
+NIST Cybersecurity Framework **2.0** is the primary reference. CIS Controls **v8.1** provides secondary safeguards where the observed service warrants them. New findings show concise references under **Potential Framework Alignment**. Expand **Why and next checks** for the official wording, observed evidence, rationale, and verification steps. [Official NIST CSF 2.0 Core](https://nvlpubs.nist.gov/nistpubs/CSWP/NIST.CSWP.29.pdf) · [CIS Controls v8.1 Navigator](https://www.cisecurity.org/controls/cis-controls-navigator)
 
-CIS Critical Security Controls **v8.1** is not currently mapped. Avoiding a secondary mapping set keeps the findings small and evidence-based; CIS mappings can be added after exact safeguard-level relevance is validated against the [official CIS Controls v8.1 material](https://www.cisecurity.org/controls/v8-1). A framework reference identifies a review topic; it does not mean the application assessed or certified the framework outcome.
+- **Evidence-supported relevance** applies when service probing directly supports investigating an outcome. For example, a probe identifying a cleartext-capable service makes data-in-transit protection relevant to verify.
+- **Potential control relevance** identifies a review prompted by listener reachability, such as checking approved configurations or authentication settings. Port-inferred service identities are marked unverified.
+
+Both categories guide manual verification. Framework relevance does not establish compliance or noncompliance. Historical assessments retain their saved mappings.
 
 ## Status, policy priority, and vulnerability severity
 
@@ -76,4 +79,4 @@ Install the project dependencies, including ReportLab, in the project virtual en
 .venv\Scripts\python -m pip install -r requirements.txt
 ```
 
-Open a completed assessment from the dashboard or history and select **Download PDF Report**. The report is generated from that assessment's stored SQLite record; it does not start another scan. It includes the original scan time, stored open-port findings, policy statuses and priorities, existing NIST CSF 2.0 mappings, evidence, remediation and manual verification guidance, and interpretation limits. High/Medium/Low values are policy priorities, not CVSS or official NIST ratings. An open port alone does not establish a vulnerability or policy violation.
+Open a completed assessment from the dashboard or history and select **Download PDF Report**. The report is generated from that assessment's stored SQLite record; it does not start another scan. It includes the original scan time, stored open-port findings, policy statuses and priorities, saved NIST CSF and CIS Controls references where available, evidence, remediation and manual verification guidance, and interpretation limits. High/Medium/Low values are policy priorities, not CVSS or official NIST ratings. An open port alone does not establish a vulnerability or policy violation.
